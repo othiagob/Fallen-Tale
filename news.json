@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Bem-vindo ao Fallen Tale!",
+    "date": "17/10/2026",
+    "category": "LANÃ‡AMENTO",
+    "summary": "O novo launcher e sistema de atualizaÃ§Ã£o automÃ¡tica jÃ¡ estÃ£o operacionais. Bom jogo a todos os guerreiros!",
+    "url": "https://github.com/othiagob/Fallen-Tale"
+  },
+  {
+    "title": "VersÃ£o Base 1.0.0 Ativa",
+    "date": "17/10/2026",
+    "category": "PATCH",
+    "summary": "Cliente base v1.0.0 autenticado com assinatura criptogrÃ¡fica Ed25519.",
+    "url": "https://github.com/othiagob/Fallen-Tale/releases"
+  }
+]
