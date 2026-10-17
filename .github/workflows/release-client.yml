@@ -1,0 +1,143 @@
+name: Release Game Client / Patch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão da release (ex: 1.0.1)'
+        required: true
+        type: string
+      channel:
+        description: 'Canal de distribuição'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - beta
+      release_notes:
+        description: 'Notas de lançamento do patch'
+        required: false
+        default: 'Atualização periódica do Fallen Tale'
+        type: string
+      dry_run:
+        description: 'Simular build sem publicar no GitHub Releases (dry-run)'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    # JUSTIFICATIVA DO RUNNER (Ubuntu):
+    # O release-tool e launcher-core são desenvolvidos em Java 17 puro, sendo totalmente portáveis.
+    # O runner Ubuntu inicia em segundos e consome apenas 1x minutos de cota do GitHub Actions
+    # (em contraste com 2x cobrado por runners Windows), gerando releases mais rápidas e econômicas.
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build Release Tool
+        run: |
+          cd updater
+          mvn --batch-mode clean package -pl launcher-core,release-tool -am -DskipTests=false
+
+      - name: Prepare Workspace and Previous Manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p release_output
+          mkdir -p previous_manifest
+          
+          # Tenta baixar o manifest da última release para deduplicação CAS
+          LATEST_TAG=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            echo "Última release encontrada: $LATEST_TAG. Baixando manifest anterior para CAS..."
+            gh release download "$LATEST_TAG" -p "manifest.json" -D previous_manifest 2>/dev/null || true
+          else
+            echo "Nenhuma release anterior encontrada. Realizando build inicial v1..."
+          fi
+
+      - name: Sign and Build CAS Release Package
+        env:
+          SIGNING_KEY_BASE64: ${{ secrets.RELEASE_SIGNING_KEY }}
+          REPO_NAME: ${{ github.repository }}
+        run: |
+          if [ -z "$SIGNING_KEY_BASE64" ]; then
+            echo "::error::Secret RELEASE_SIGNING_KEY não configurada no repositório!"
+            exit 1
+          fi
+
+          # Cria diretório temporário restrito para a chave
+          KEY_DIR=$(mktemp -d)
+          KEY_PATH="$KEY_DIR/signing.key"
+          
+          # Trap para garantir exclusão imediata da chave privada em caso de sucesso ou falha
+          trap 'rm -rf "$KEY_DIR"' EXIT
+
+          echo "$SIGNING_KEY_BASE64" | tr -d '\r\n' > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+
+          PREV_ARG=""
+          if [ -f "previous_manifest/manifest.json" ]; then
+            PREV_ARG="--prev previous_manifest/manifest.json"
+          fi
+
+          DRY_ARG=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_ARG="--dry-run"
+          fi
+
+          URL_PREFIX="https://github.com/$REPO_NAME/releases/download/v${{ inputs.version }}/"
+
+          # Executa o build da release
+          java -jar updater/release-tool/target/release-tool.jar build \
+            --input "game-client-dist" \
+            --out "release_output" \
+            --version "${{ inputs.version }}" \
+            --channel "${{ inputs.channel }}" \
+            --key "$KEY_PATH" \
+            --base-url "$URL_PREFIX" \
+            $PREV_ARG \
+            $DRY_ARG
+
+      - name: Publish to GitHub Releases
+        if: ${{ inputs.dry_run == false }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          TITLE="Fallen Tale ${{ inputs.version }} (${{ inputs.channel }})"
+          
+          echo "Criando release $TAG no GitHub..."
+          
+          # Coleta todos os arquivos gerados (manifest.json, manifest.sig e objetos CAS em objects/*)
+          FILES_TO_UPLOAD=()
+          FILES_TO_UPLOAD+=("release_output/manifest.json")
+          FILES_TO_UPLOAD+=("release_output/manifest.sig")
+          
+          if [ -d "release_output/objects" ]; then
+            for obj in release_output/objects/*; do
+              if [ -f "$obj" ]; then
+                FILES_TO_UPLOAD+=("$obj")
+              fi
+            done
+          fi
+
+          gh release create "$TAG" "${FILES_TO_UPLOAD[@]}" \
+            --title "$TITLE" \
+            --notes "${{ inputs.release_notes }}" \
+            $([ "${{ inputs.channel }}" = "beta" ] && echo "--prerelease" || echo "")
+
+          echo "Release $TAG publicada com sucesso no GitHub Releases!"
