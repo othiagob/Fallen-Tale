@@ -1,16 +1,9 @@
 [
   {
-    "title": "Bem-vindo ao Fallen Tale!",
-    "date": "17/10/2026",
-    "category": "LANÃ‡AMENTO",
-    "summary": "O novo launcher e sistema de atualizaÃ§Ã£o automÃ¡tica jÃ¡ estÃ£o operacionais. Bom jogo a todos os guerreiros!",
-    "url": "https://github.com/othiagob/Fallen-Tale"
-  },
-  {
-    "title": "VersÃ£o Base 1.0.0 Ativa",
-    "date": "17/10/2026",
-    "category": "PATCH",
-    "summary": "Cliente base v1.0.0 autenticado com assinatura criptogrÃ¡fica Ed25519.",
+    "title": "A Primeira Publicação Oficial de Fallen Tale",
+    "date": "17/10/2026  •  Versão Base 1.0.0",
+    "category": "MARCO HISTÓRICO",
+    "summary": "Hoje celebramos o nascimento oficial da primeira build pública de testes do Fallen Tale! Para chegarmos até aqui, reconstruímos as fundações do cliente em arquitetura 64-bits com motor gráfico DirectX 11 e rede moderna SlikeNet.\n\n• Identidade Visual Clássica: Todas as janelas, inventário, troca, forja, armazém e desafios receberam acabamento artesanal em couro nobre, madeira de nogueira, ferro forjado e pedras rúnicas de jade.\n\n• Atualizador Inteligente: Desenvolvemos este Launcher com assinatura criptográfica Ed25519 e atualização diferencial para que você receba cada novo patch de forma rápida, segura e automática.",
     "url": "https://github.com/othiagob/Fallen-Tale/releases"
   }
 ]
