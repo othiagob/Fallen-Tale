@@ -1,8 +1,8 @@
 # Fallen Tale
 
-RepositÃ³rio oficial de distribuiÃ§Ã£o, atualizaÃ§Ãµes e releases do cliente de jogo Fallen Tale.
+Repositório oficial de distribuição, atualizações e releases do cliente de jogo Fallen Tale.
 
-## Sistema de AtualizaÃ§Ã£o
-- **Tecnologia**: Engine CAS (Content Addressable Storage) com verificaÃ§Ã£o SHA-256 e assinatura criptogrÃ¡fica Ed25519.
-- **Canal PadrÃ£o**: release
+## Sistema de Atualização
+- **Tecnologia**: Engine CAS (Content Addressable Storage) com verificação SHA-256 e assinatura criptográfica Ed25519.
+- **Canal Padrão**: release
 - **Launcher**: JavaFX 21 Dark Fantasy
